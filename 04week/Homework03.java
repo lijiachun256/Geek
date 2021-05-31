@@ -1,8 +1,10 @@
 package weather.sunny.geek;
 
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -10,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -35,16 +38,37 @@ public class Homework03 {
         ThreadPoolExecutor threadPool = new ThreadPoolExecutor(1, 5, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>(10),new ThreadPoolExecutor.CallerRunsPolicy());
 
         //1
-        Integer result = test1(threadPool);
+//        Integer result = test1(threadPool);
 // 2       Integer result = test2(threadPool);
 // 3       Integer result = test3(threadPool);
 // 4       Integer result = test4();
 // 5        Integer result = test5();
-
+        //6
+//        test6();
+        //7
+       /* CyclicBarrier cyclicBarrier = new CyclicBarrier(2,() -> {
+            System.out.println("大家一起来,第7种");
+        });
+        test7(cyclicBarrier,threadPool);
+        try {
+            cyclicBarrier.await();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
+        // 8
+        test8();
+        synchronized (hh) {
+            try {
+                hh.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        //9
 
 
         // 确保  拿到result 并输出
-        System.out.println("异步计算结果为：" + result);
+        System.out.println("异步计算结果为：" + result6);
 
         System.out.println("使用时间：" + (System.currentTimeMillis() - start) + " ms");
 
@@ -146,4 +170,38 @@ public class Homework03 {
         }
     }
 
+    private static void test6() {
+        Thread thread = new Thread(() -> {
+            result6 = sum();
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void test7(CyclicBarrier cyclicBarrier,ThreadPoolExecutor threadPool) {
+        threadPool.execute(() -> {
+            result6 = sum();
+            try {
+                cyclicBarrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private static void test8() {
+        Thread thread = new Thread(() -> {
+            result6 = sum();
+            synchronized (hh) {
+                hh.notifyAll();
+            }
+        });
+        thread.start();
+    }
 }
